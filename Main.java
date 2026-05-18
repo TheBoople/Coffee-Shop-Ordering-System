@@ -1,25 +1,32 @@
 // Tool Imports
-import javax.swing.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 import java.util.Scanner;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 
 // Classes
 class CoffeeShop
 {
-    File prices = new File("prices.txt");
+   File prices = new File("Prices.txt");
+/*
+
+Vanilla Latte $4.85
+Caramel Macchiato $6.30
+Americano $3.50
+Hazelnut Latte $4.95
+Vanilla Bean Creme $7.00
+
+ */
     Scanner input = new Scanner(System.in);
-    Scanner reader = new Scanner(prices);
+    Scanner priceReader = new Scanner(prices);
+
+    String customerName = "N/A";
     double discount = 0;
     int discountStatus = 0;
     int drink = 0;
     double price = 0;
+    String selectedLine = "N/A";
 
-// Customizations
+    // Customizations
     String size = "Regular";
     String milk = "2%";
 
@@ -57,19 +64,20 @@ class CoffeeShop
         }
     }
 
-    void order() throws FileNotFoundException
+    void order()
     {
         System.out.println(" ");
         System.out.println("~~~Menu~~~");
         int i =1;
-        for (reader.hasNextLine(); i <= 5; i++)
+        for (priceReader.hasNextLine(); i <= 5; i++)
         {
-            String line = reader.nextLine();
-            System.out.println(i + ". " + line);
+           String line = priceReader.nextLine();
+           System.out.println(i + ". " + line);
         }
         System.out.print("Please enter drink selection (1-5): ");
         int drinkOption = input.nextInt();
-        switch(drinkOption) {
+        switch(drinkOption)
+        {
             case 1: { System.out.println("Thank you for choosing: Vanilla Latte"); drink = 1; price = 4.85; break; }
             case 2: { System.out.println("Thank you for choosing: Caramel Macchiato"); drink = 2; price = 6.30; break; }
             case 3: { System.out.println("Thank you for choosing: Americano"); drink = 3; price = 3.50; break; }
@@ -108,9 +116,9 @@ class CoffeeShop
     void orderSummary()
     {
         System.out.println(" ");
-        System.out.println("Order Summary: ");
+        System.out.println("~~Order Summary~~");
         try {
-            String selectedLine = Files.readAllLines(Paths.get("prices.txt")).get(drink-1);
+            selectedLine = Files.readAllLines(Paths.get("Prices.txt")).get(drink-1);
             System.out.println("Drink Ordered: " + selectedLine);
         } catch (IOException e) {
             System.out.println("Error Found. Please Try Again.");
@@ -122,34 +130,70 @@ class CoffeeShop
         System.out.println("Discount: " + discount);
         price = (1-discount)*price;
 
-        System.out.println("Final Total: " + price);
+        System.out.println("Final Total: " + price + "\n");
 
     }
 
-    void saveOrder()
+    void orderName()
     {
+        System.out.print("Enter Name for Order: ");
+        customerName = input.next();
+        System.out.println("Thank you for ordering \"" + customerName + "\"\n");
+    }
 
+    void saveOrder() throws IOException
+    {
+            FileWriter writer = new FileWriter("Receipt.txt");
+            writer.write(customerName + "\n");
+            writer.write(selectedLine + "\n");
+            writer.write("Milk Type: " + milk + "\n");
+            writer.write("Customer Discount: " + discount * 100 + "%" + "\n");
+            writer.write("Total: " + price + "\n");
+            writer.close();
     }
 
     void reverseSearch()
     {
-
+// The Cancer Function
+        try (BufferedReader reverseSearch = new BufferedReader(new FileReader("Receipt.txt"));)
+        {
+            int i = 0;
+            System.out.print("Please enter order name (case sensitive): ");
+            String find = input.next();
+            String line;
+            while ((line = reverseSearch.readLine()) != null)
+            {
+                if (line.contains(find))
+                {
+                    System.out.println("Order Found \n");
+                while (i<=3)
+                    {
+                        System.out.println(reverseSearch.readLine());
+                        i++;
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No Order Found");
+        } catch (IOException e)
+        {
+            System.out.println("Invalid Operation");
+        }
     }
-
 // End Class
 }
 
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException
+    public static void main(String[] args) throws IOException
     {
         CoffeeShop c1 = new CoffeeShop();
         c1.beginOrder();
         c1.order();
         c1.customize();
         c1.orderSummary();
-
-
-
+        c1.orderName();
+        c1.saveOrder();
+        c1.reverseSearch();
 
     }
 }
